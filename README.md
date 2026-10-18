@@ -12,6 +12,39 @@ Base compartida de **Pi normal** para Windows (casa) y macOS (trabajo). Independ
 
 No se ha elegido ni instalado todavía una extensión de subagentes. Pi no trae subagentes de serie.
 
+## Gestión desde cualquier sesión de Pi
+
+Después de instalar el paquete y ejecutar `/reload`, usa:
+
+| Comando | Comportamiento |
+|---|---|
+| `/toolkit` | Ayuda y subcomandos disponibles. |
+| `/toolkit status` | Ruta, rama, cambios locales y commits por sincronizar; usa la referencia remota almacenada, sin conexión de red. |
+| `/toolkit add FUENTE` | Confirma, registra una versión fija, aplica setup y reconcilia dependencias. No hace commit ni push. |
+| `/toolkit sync` | Requiere main limpio, hace fetch, pide confirmación y avanza al commit revisado sin merge de conflictos. Ejecuta pruebas/setup y reconcilia dependencias. |
+| `/toolkit publish` | Revisa rutas y posibles secretos, ejecuta pruebas, muestra diff, pide mensaje de commit y confirmación independiente para push. |
+| `/toolkit doctor` | Ejecuta pruebas y comprueba versiones/configuración sin mostrar credenciales. |
+
+Ejemplo de formato: `/toolkit add npm:@organizacion/plugin@1.2.3` (paquete ilustrativo, no real).
+Usa versiones npm completas o commits/tags Git de versión, por ejemplo `git:github.com/org/repo@v1.2.3`.
+La instalación/reconciliación afecta a **todos los paquetes declarados en ese Pi**, incluidos los locales, porque utiliza `pi update --extensions`.
+Revisa y confía en el código antes de aceptar: los plugins pueden ejecutar programas.
+La extensión resuelve su repositorio desde su propia ubicación, no desde el proyecto que estés trabajando.
+
+`publish` solo gestiona main y el origin esperado `carlosYoko/cgbdev-pi-toolkit`.
+No usa `git add .`, no fuerza pushes, no guarda cambios con stash ni resuelve conflictos.
+Rechaza índices previamente preparados, rutas fuera del conjunto compartible, binarios, archivos grandes y enlaces simbólicos.
+El escáner de secretos es orientativo: **debes revisar el diff y confirmar que no incluye información privada o de empresa**.
+Un push rechazado/cancelado conserva el commit local; vuelve a ejecutar `publish` tras revisar el estado.
+Si falla una instalación, puede quedar el manifiesto registrado y los ajustes aplicados; se informa del estado sin borrar nada automáticamente.
+No hay recarga automática: usa `/reload` después de add/sync.
+
+La skill común `toolkit-maintenance` explica este flujo al agente cuando se lo pides en lenguaje natural.
+Los comandos slash los ejecuta el usuario; la skill no los invoca como si fueran herramientas.
+Las operaciones con confirmación requieren interfaz interactiva o un cliente RPC que soporte diálogos.
+Las pruebas de procesos usan repositorios temporales; no hacen instalaciones ni pushes reales.
+GitHub Actions ejecuta las pruebas en Windows/macOS con Node 22/24 cuando se publique esta configuración.
+
 ## Requisitos
 
 Node.js >=22.19 y Pi instalado. Base comprobada inicialmente con Pi 1.3.0.

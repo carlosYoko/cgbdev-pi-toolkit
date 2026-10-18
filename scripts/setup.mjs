@@ -35,10 +35,11 @@ export function mergeSettings(current, shared, packageRoot, packages = []) {
   if (!Array.isArray(packages)) throw new Error('packages.json debe ser un array.');
   for (const source of packages) {
     // Keep dependency declarations explicit and versioned; never execute shell strings.
-    if (typeof source !== 'string' || !( /^npm:(?:@[^/]+\/)?[^@]+@[^\s]+$/.test(source) || /^git:[^\s]+@[^\s]+$/.test(source))) {
-      throw new Error('Cada paquete externo debe fijar una versión npm o referencia Git.');
+    const exactNpm = /^npm:(?:@[a-z0-9_.-]+\/)?[a-z0-9_.-]+@\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/;
+    const pinnedGit = /^git:(?:(?:https:\/\/)?[a-zA-Z0-9.-]+\/|git@[a-zA-Z0-9.-]+:)[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+@(?:[a-fA-F0-9]{7,40}|v?\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?)$/;
+    if (typeof source !== 'string' || !(exactNpm.test(source) || pinnedGit.test(source))) {
+      throw new Error('Cada paquete debe usar versión npm exacta (1.2.3) o commit/tag Git de versión (v1.2.3), sin credenciales en la URL.');
     }
-    if (/[@](latest|next|main|master)$/.test(source) || source.includes('*') || source.includes('^') || source.includes('~')) throw new Error('Usa versiones o referencias estables, no rangos ni ramas móviles.');
   }
   if (result.packages !== undefined && !Array.isArray(result.packages)) throw new Error('packages local debe ser un array.');
   result.packages = [...(result.packages ?? [])];
