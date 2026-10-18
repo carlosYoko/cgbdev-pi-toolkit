@@ -10,7 +10,7 @@ import { mergeSettings } from '../scripts/setup.mjs';
 const execute = promisify(execFile);
 
 test('rutas compartibles y detección de secretos', () => {
-  for (const name of ['extensions/test.ts','skills/common/a/SKILL.md','README.md']) assert.equal(safePath(name),true);
+  for (const name of ['extensions/test.ts','skills/common/a/SKILL.md','README.md','LICENSE']) assert.equal(safePath(name),true);
   for (const name of ['auth.json','skills/work/a/SKILL.md','local/test','../README.md','extensions/.env','extensions/../auth.json','/README.md']) assert.equal(safePath(name),false);
   assert.throws(() => assertNoSecrets('ghp_' + 'a'.repeat(30)));
   assert.throws(() => assertNoSecrets(['-----BEGIN','PRIVATE KEY-----'].join(' ')));

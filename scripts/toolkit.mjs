@@ -5,7 +5,7 @@ import { mergeSettings } from './setup.mjs';
 export const commands = ['status', 'add', 'sync', 'publish', 'doctor'];
 export const help = '/toolkit status | add npm:paquete@1.2.3 | sync | publish | doctor';
 const allowedRoots = ['config/', 'extensions/', 'skills/common/', 'prompts/', 'themes/', 'scripts/', 'test/', '.github/workflows/'];
-const allowedFiles = new Set(['README.md', 'AGENTS.md', 'package.json', 'package-lock.json', '.gitignore', '.gitattributes']);
+const allowedFiles = new Set(['README.md', 'LICENSE', 'AGENTS.md', 'package.json', 'package-lock.json', '.gitignore', '.gitattributes']);
 export function safePath(name) {
   return !name.includes('\\') && !name.split('/').some(p => p === '..' || p === '.' || /^(?:\.env(?:\..*)?|auth\.json|sessions|local|backups|node_modules)$/i.test(p)) && !name.startsWith('/') && (allowedFiles.has(name) || allowedRoots.some(p => name.startsWith(p)));
 }

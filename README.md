@@ -115,3 +115,9 @@ Los cambios directos en settings locales NO se exportan automáticamente al repo
 
 `npm run check` verifica que lo compartido esté aplicado, sin escribir.
 `--dry-run` muestra un resumen de claves a cambiar, nunca los valores privados.
+
+## Licencia
+
+[MIT](LICENSE). Copyright (c) 2026 Carlos Gimenez.
+La licencia cubre los archivos propios del repositorio; los plugins de terceros conservan sus licencias.
+`private: true` en package.json evita publicar por accidente en npm; no determina la visibilidad en GitHub.
