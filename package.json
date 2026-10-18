@@ -1,0 +1,29 @@
+{
+  "name": "cgbdev-pi-toolkit",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Configuración compartida de Pi para casa y trabajo",
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "scripts": {
+    "setup": "node scripts/setup.mjs",
+    "check": "node scripts/setup.mjs --check",
+    "test": "node --test"
+  },
+  "pi": {
+    "extensions": [
+      "./extensions"
+    ],
+    "skills": [
+      "./skills/common"
+    ],
+    "prompts": [
+      "./prompts"
+    ],
+    "themes": [
+      "./themes"
+    ]
+  }
+}
