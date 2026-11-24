@@ -101,7 +101,7 @@ Prueba aislada: `pi --no-skills --skill ./skills/common/efficient-tools`.
 ## Extensiones y subagentes
 
 Extensiones propias en `extensions/`; compartidas de terceros en `config/packages.json`.
-Definiciones compartidas en `agents/` (planner, worker, reviewer, scout, researcher). La extensión subagent descubre primero estos agentes como fallback, después los de usuario y proyecto; estos últimos prevalecen si comparten nombre. No se copian agentes al directorio vivo. APPEND_SYSTEM.md se instala en el agent-dir durante setup, respaldando la versión previa; `--dry-run` y `--check` solo informan.
+Definiciones compartidas en `agents/` (planner, worker, reviewer, scout, researcher). Admiten `thinkingLevel` opcional (`off`, `minimal`, `low`, `medium`, `high`, `xhigh`, `max`), que prevalece sobre el nivel heredado de la sesión; niveles inválidos se ignoran. La extensión descubre primero estos agentes como fallback, después los de usuario y proyecto; estos últimos prevalecen si comparten nombre. No se copian agentes al directorio vivo. APPEND_SYSTEM.md se instala en el agent-dir durante setup, respaldando la versión previa; `--dry-run` y `--check` solo informan.
 Codemode ya viene integrado: no se instala un paquete adicional.
 No se comparten MCP ni endpoints: los archivos `mcp*.json`/auth son locales, incluidos los MCP lazy que requieren configuración por equipo. No se exportan modelos/endpoints corporativos de `models.json`.
 
