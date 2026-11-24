@@ -101,9 +101,17 @@ Prueba aislada: `pi --no-skills --skill ./skills/common/efficient-tools`.
 ## Extensiones y subagentes
 
 Extensiones propias en `extensions/`; compartidas de terceros en `config/packages.json`.
-Definiciones compartidas en `agents/` (planner, worker, reviewer, scout, researcher). Admiten `thinkingLevel` opcional (`off`, `minimal`, `low`, `medium`, `high`, `xhigh`, `max`), que prevalece sobre el nivel heredado de la sesión; niveles inválidos se ignoran. La extensión descubre primero estos agentes como fallback, después los de usuario y proyecto; estos últimos prevalecen si comparten nombre. No se copian agentes al directorio vivo. APPEND_SYSTEM.md se instala en el agent-dir durante setup, respaldando la versión previa; `--dry-run` y `--check` solo informan.
+Definiciones compartidas en `agents/` (planner, worker, fast-worker, reviewer, scout, researcher). Admiten `thinkingLevel` opcional (`off`, `minimal`, `low`, `medium`, `high`, `xhigh`, `max`), que prevalece sobre el nivel heredado de la sesión; niveles inválidos se ignoran. La extensión descubre primero estos agentes como fallback, después los de usuario y proyecto; estos últimos prevalecen si comparten nombre. No se copian agentes al directorio vivo. APPEND_SYSTEM.md se instala en el agent-dir durante setup, respaldando la versión previa; `--dry-run` y `--check` solo informan.
 Codemode ya viene integrado: no se instala un paquete adicional.
 No se comparten MCP ni endpoints: los archivos `mcp*.json`/auth son locales, incluidos los MCP lazy que requieren configuración por equipo. No se exportan modelos/endpoints corporativos de `models.json`.
+
+### Coordinación e implementación
+
+- `worker`: Sol 6.1 con razonamiento alto para implementación sustantiva.
+- `fast-worker`: Luna 6 con razonamiento medio para cambios mecánicos explícitos.
+- `reviewer`: Sol 6.1 con razonamiento alto.
+
+`config/AGENTS.md` conserva las instrucciones globales de coordinación: menos delegaciones, validaciones sin duplicación y una sesión por ticket independiente. Para aplicarlas en otro equipo, copia su contenido a `<agent-dir>/AGENTS.md`, revisando y respaldando cualquier archivo existente. Setup no instala este archivo automáticamente. El `AGENTS.md` de la raíz contiene únicamente instrucciones de mantenimiento de este repositorio.
 
 ## Qué modifica setup
 
