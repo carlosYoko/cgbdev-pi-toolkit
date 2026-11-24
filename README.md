@@ -1,16 +1,16 @@
 # cgbdev-pi-toolkit
 
-Base compartida de **Pi normal** para Windows (casa) y macOS (trabajo). Independiente de SDD.
+Base compartida de **Pi normal** para Windows y macOS. Independiente de SDD.
 
 ## Incluido
 
 - Paquete Pi local: extensiones, skills comunes, prompts y temas.
-- Codemode integrado activado, conservando las herramientas existentes.
+- Ajustes UI compartidos validados; codemode es una herramienta incorporada de Pi, no un ajuste compartido.
 - Skill común `efficient-tools`.
 - Setup multiplataforma con copia de seguridad y conservación de ajustes locales.
 - Pruebas aisladas: no usan tus credenciales ni tu configuración real.
 
-No se ha elegido ni instalado todavía una extensión de subagentes. Pi no trae subagentes de serie.
+Incluye agentes para la extensión de subagentes; el paquete/extensión se registra desde el toolkit. Los modelos sensibles se conservan locales.
 
 ## Gestión desde cualquier sesión de Pi
 
@@ -47,7 +47,7 @@ GitHub Actions ejecuta las pruebas en Windows/macOS con Node 22/24 cuando se pub
 
 ## Requisitos
 
-Node.js >=22.19 y Pi instalado. Base comprobada inicialmente con Pi 1.3.0.
+Node.js >=22.19 y Pi instalado. Requiere Pi 1.5.2 o posterior.
 Conviene mantener la misma versión de Pi en ambos equipos; el setup no la actualiza.
 
 ## Primera instalación
@@ -60,9 +60,9 @@ node scripts/setup.mjs --dry-run
 npm run setup
 ```
 
-El setup registra ESTA carpeta como paquete local en `~/.pi/agent/settings.json`.
+El setup registra ESTA carpeta como paquete local en `<agent-dir>/settings.json`.
 No copia recursos ni necesita enlaces simbólicos. No muevas la carpeta sin volver a ejecutar setup.
-Respeta `PI_CODING_AGENT_DIR`; también admite `--agent-dir RUTA`.
+Respeta `PI_CODING_AGENT_DIR`; también admite `--agent-dir RUTA`. En Windows usa PowerShell o CMD con Node.js instalado; los comandos npm anteriores son multiplataforma.
 
 Haz login por separado en cada equipo. Después ejecuta `/reload` en Pi o reinícialo.
 Usa `pi config` para activar/desactivar recursos. El setup conserva los filtros de tu paquete local.
@@ -101,13 +101,13 @@ Prueba aislada: `pi --no-skills --skill ./skills/common/efficient-tools`.
 ## Extensiones y subagentes
 
 Extensiones propias en `extensions/`; compartidas de terceros en `config/packages.json`.
-Las definiciones de agentes se añadirán cuando se elija una extensión y su formato.
+Definiciones compartidas en `agents/` (planner, worker, reviewer, scout, researcher). La extensión subagent descubre primero estos agentes como fallback, después los de usuario y proyecto; estos últimos prevalecen si comparten nombre. No se copian agentes al directorio vivo. APPEND_SYSTEM.md se instala en el agent-dir durante setup, respaldando la versión previa; `--dry-run` y `--check` solo informan.
 Codemode ya viene integrado: no se instala un paquete adicional.
-No se comparten MCP corporativos ni credenciales. Los MCP locales se configuran por equipo.
+No se comparten MCP ni endpoints: los archivos `mcp*.json`/auth son locales, incluidos los MCP lazy que requieren configuración por equipo. No se exportan modelos/endpoints corporativos de `models.json`.
 
 ## Qué modifica setup
 
-Solo añade paquetes compartidos y combina las claves declaradas en settings.shared.json.
+Solo añade paquetes compartidos, combina claves UI permitidas en settings.shared.json y actualiza APPEND_SYSTEM.md con copia previa.
 Conserva modelo, proveedor, tema, credenciales, rutas y demás ajustes no declarados.
 No toca `auth.json`, skills locales, sesiones, keybindings ni SDD.
 Si cambia settings, guarda una copia en `<agent-dir>/toolkit-backups/`.

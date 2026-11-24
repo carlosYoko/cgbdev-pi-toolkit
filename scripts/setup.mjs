@@ -7,7 +7,7 @@ export const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '
 const sourceOf = value => typeof value === 'string' ? value : value?.source;
 
 export function mergeSettings(current, shared, packageRoot, packages = []) {
-  const supported = new Set(['defaultTools', 'codemode']);
+  const supported = new Set(['defaultProvider', 'defaultModel', 'fullscreenExitOutput', 'defaultTools', 'defaultThinkingLevel', 'theme', 'hideThinkingBlock', 'showCacheMissNotices', 'steeringMode', 'followUpMode', 'doubleEscapeAction', 'treeFilterMode', 'quietStartup', 'tuiMode', 'fullscreenScrollbar', 'fullscreenCopyOnSelect', 'outputPad', 'autocompleteMaxVisible', 'showHardwareCursor']);
   for (const key of Object.keys(shared)) {
     if (!supported.has(key)) throw new Error(`Clave compartida no autorizada: ${key}`);
   }
@@ -25,13 +25,20 @@ export function mergeSettings(current, shared, packageRoot, packages = []) {
     }
     result.defaultTools = tools;
   }
-  if (shared.codemode !== undefined) {
-    if (!shared.codemode || typeof shared.codemode !== 'object' || Array.isArray(shared.codemode)) throw new Error('codemode debe ser un objeto.');
-    if (Object.keys(shared.codemode).some(k => !['mode', 'inlineBudget'].includes(k))) throw new Error('Opción codemode no autorizada.');
-    if (shared.codemode.mode !== undefined && !['on', 'only'].includes(shared.codemode.mode)) throw new Error('Modo codemode inválido.');
-    if (shared.codemode.inlineBudget !== undefined && (!Number.isSafeInteger(shared.codemode.inlineBudget) || shared.codemode.inlineBudget < 0)) throw new Error('inlineBudget inválido.');
-    result.codemode = { ...result.codemode, ...shared.codemode };
-  }
+  const enums = {
+    defaultThinkingLevel: ['off', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max'],
+    steeringMode: ['all', 'one-at-a-time'], followUpMode: ['all', 'one-at-a-time'],
+    doubleEscapeAction: ['tree', 'fork', 'none'],
+    treeFilterMode: ['default', 'no-tools', 'user-only', 'labeled-only', 'all'],
+    tuiMode: ['regular', 'fullscreen'], fullscreenScrollbar: ['auto', 'always', 'hidden'],
+  };
+  for (const [key, options] of Object.entries(enums)) if (shared[key] !== undefined && !options.includes(shared[key])) throw new Error(`${key} inválido.`);
+  for (const key of ['theme', 'defaultProvider', 'defaultModel', 'fullscreenExitOutput']) if (shared[key] !== undefined && (typeof shared[key] !== 'string' || !shared[key].trim())) throw new Error(`${key} debe ser texto no vacío.`);
+  for (const key of ['hideThinkingBlock', 'showCacheMissNotices', 'fullscreenCopyOnSelect', 'showHardwareCursor']) if (shared[key] !== undefined && typeof shared[key] !== 'boolean') throw new Error(`${key} debe ser booleano.`);
+  if (shared.quietStartup !== undefined && typeof shared.quietStartup !== 'boolean' && shared.quietStartup !== 'header') throw new Error('quietStartup inválido.');
+  if (shared.outputPad !== undefined && ![0, 1].includes(shared.outputPad)) throw new Error('outputPad inválido.');
+  if (shared.autocompleteMaxVisible !== undefined && (!Number.isSafeInteger(shared.autocompleteMaxVisible) || shared.autocompleteMaxVisible < 3 || shared.autocompleteMaxVisible > 20)) throw new Error('autocompleteMaxVisible inválido.');
+  for (const key of Object.keys(shared)) if (key !== 'defaultTools') result[key] = shared[key];
   if (!Array.isArray(packages)) throw new Error('packages.json debe ser un array.');
   for (const source of packages) {
     // Keep dependency declarations explicit and versioned; never execute shell strings.
@@ -66,24 +73,40 @@ export async function apply({ agentDir, dryRun = false, check = false, packageRo
     fs.readFile(path.join(packageRoot, 'config/packages.json'), 'utf8').then(JSON.parse),
   ]);
   const target = path.join(agentDir, 'settings.json');
+  const appendTarget = path.join(agentDir, 'APPEND_SYSTEM.md');
+  const appendSource = path.join(packageRoot, 'APPEND_SYSTEM.md');
   let original;
   try { original = await fs.readFile(target, 'utf8'); }
   catch (error) { if (error.code !== 'ENOENT') throw error; }
+  const appendContent = await fs.readFile(appendSource, 'utf8');
+  const appendOriginal = await fs.readFile(appendTarget, 'utf8').catch(error => { if (error.code === 'ENOENT') return undefined; throw error; });
   const current = original === undefined ? {} : JSON.parse(original);
   if (!current || typeof current !== 'object' || Array.isArray(current)) throw new Error('settings.json debe contener un objeto.');
   const merged = mergeSettings(current, shared, packageRoot, packages);
   const keys = Object.keys(merged).filter(k => JSON.stringify(current[k]) !== JSON.stringify(merged[k]));
-  if (!keys.length) { log('Configuración al día.'); return { changed: false }; }
-  log(`Claves a actualizar: ${keys.join(', ')}. No se muestran valores locales.`);
+  const appendChanged = appendOriginal !== appendContent;
+  if (!keys.length && !appendChanged) { log('Configuración al día.'); return { changed: false }; }
+  if (keys.length) log(`Claves a actualizar: ${keys.join(', ')}. No se muestran valores locales.`);
+  if (appendChanged) log('APPEND_SYSTEM.md se instalará o actualizará.');
   if (check || dryRun) return { changed: true };
   await fs.mkdir(agentDir, { recursive: true });
-  if (original !== undefined) {
+  if (original !== undefined || (appendChanged && appendOriginal !== undefined)) {
     const backupDir = path.join(agentDir, 'toolkit-backups');
     await fs.mkdir(backupDir, { recursive: true });
-    const name = `settings-${Date.now()}-${process.pid}.json`;
-    await fs.writeFile(path.join(backupDir, name), original, { mode: 0o600, flag: 'wx' });
-    log(`Copia de seguridad: ${path.join(backupDir, name)}`);
+    const suffix = `${Date.now()}-${process.pid}-${Math.random().toString(16).slice(2)}`;
+    const name = `settings-${suffix}.json`;
+    if (original !== undefined) {
+      await fs.writeFile(path.join(backupDir, name), original, { mode: 0o600, flag: 'wx' });
+      log(`Copia de seguridad: ${path.join(backupDir, name)}`);
+    }
+    if (appendChanged && appendOriginal !== undefined) {
+      const appendBackup = path.join(backupDir, `APPEND_SYSTEM-${suffix}.md`);
+      await fs.writeFile(appendBackup, appendOriginal, { mode: 0o600, flag: 'wx' });
+      log(`Copia de seguridad de APPEND_SYSTEM.md creada.`);
+    }
   }
+  if (appendChanged) await fs.writeFile(appendTarget, appendContent, { mode: 0o600 });
+  if (!keys.length) { log('APPEND_SYSTEM.md aplicado.'); return { changed: true }; }
   const temporary = `${target}.toolkit-${process.pid}.tmp`;
   try {
     await fs.writeFile(temporary, JSON.stringify(merged, null, 2) + '\n', { mode: 0o600, flag: 'wx' });

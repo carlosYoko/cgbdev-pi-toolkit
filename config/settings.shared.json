@@ -1,8 +1,13 @@
 {
+  "theme": "tokyo-night",
+  "defaultProvider": "openai-codex",
+  "defaultModel": "gpt-6.1-sol",
+  "defaultThinkingLevel": "low",
   "defaultTools": [
     "+codemode"
   ],
-  "codemode": {
-    "mode": "on"
-  }
+  "hideThinkingBlock": true,
+  "quietStartup": true,
+  "tuiMode": "fullscreen",
+  "fullscreenExitOutput": "resume-hint"
 }

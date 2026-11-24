@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { apply, mergeSettings, root } from '../scripts/setup.mjs';
-const shared = { defaultTools: ['+codemode'], codemode: { mode: 'on' } };
+const shared = { defaultTools: ['+codemode'], theme: 'tokyo-night', defaultThinkingLevel: 'low' };
 
 test('conserva ajustes locales, paquetes y filtros; no muta el original', () => {
   const original = { defaultModel: 'local', deviceId: 'local-only', skills: ['/local/skills'], packages: [{ source: root, skills: [] }, 'npm:local@1.0.0'], codemode: { inlineBudget: 500 } };
@@ -13,7 +13,8 @@ test('conserva ajustes locales, paquetes y filtros; no muta el original', () => 
   assert.equal(result.defaultModel, 'local');
   assert.deepEqual(result.skills, original.skills);
   assert.deepEqual(result.packages, original.packages);
-  assert.equal(result.codemode.inlineBudget, 500);
+  assert.deepEqual(result.codemode, { inlineBudget: 500 });
+  assert.equal(result.theme, 'tokyo-night');
   assert.deepEqual(original, snapshot);
   assert.deepEqual(mergeSettings(result, shared, root), result);
 });
@@ -26,7 +27,8 @@ test('rechaza claves compartidas sensibles, dependencias sin fijar y opciones in
   assert.throws(() => mergeSettings({}, {auth: {}}, root));
   assert.throws(() => mergeSettings({}, shared, root, ['npm:plugin']));
   assert.throws(() => mergeSettings({}, shared, root, ['npm:plugin@latest']));
-  assert.throws(() => mergeSettings({}, {codemode:{mode:'invalid'}}, root));
+  assert.throws(() => mergeSettings({}, {theme: 4}, root));
+  assert.throws(() => mergeSettings({}, {defaultThinkingLevel:'invalid'}, root));
 });
 
 test('actualiza dependencia fijada sin perder sus filtros', () => {
@@ -71,6 +73,7 @@ test('crea una configuración nueva sin tocar otros archivos', async () => {
     await apply({agentDir,log:()=>{}});
     const settings=JSON.parse(await fs.readFile(path.join(agentDir,'settings.json'),'utf8'));
     assert.deepEqual(settings.defaultTools,['+codemode']);
+    assert.equal(await fs.readFile(path.join(agentDir,'APPEND_SYSTEM.md'),'utf8'), await fs.readFile(path.join(root,'APPEND_SYSTEM.md'),'utf8'));
     assert.deepEqual(settings.packages,[root]);
   } finally { await fs.rm(dir,{recursive:true,force:true}); }
 });
